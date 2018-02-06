@@ -1,0 +1,55 @@
+From 997c4d65434a47b11741c7255c2315ff1e8a7a7a Mon Sep 17 00:00:00 2001
+From: Ian Bishop <ianbishop@pace7.com>
+Date: Sun, 14 Jan 2018 20:05:34 +1000
+Subject: [PATCH] Fix exoscale provider
+
+---
+ providers/dns/exoscale/exoscale.go | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/providers/dns/exoscale/exoscale.go b/providers/dns/exoscale/exoscale.go
+index 7b2fccc9..6b74dcdc 100644
+--- a/providers/dns/exoscale/exoscale.go
++++ b/providers/dns/exoscale/exoscale.go
+@@ -55,7 +55,7 @@ func (c *DNSProvider) Present(domain, token, keyAuth string) error {
+ 
+ 	record := egoscale.DNSRecord{
+ 		Name:       recordName,
+-		Ttl:        ttl,
++		TTL:        ttl,
+ 		Content:    value,
+ 		RecordType: "TXT",
+ 	}
+@@ -66,7 +66,7 @@ func (c *DNSProvider) Present(domain, token, keyAuth string) error {
+ 			return errors.New("Error while creating DNS record: " + err.Error())
+ 		}
+ 	} else {
+-		record.Id = recordId
++		record.ID = recordId
+ 		_, err := c.client.UpdateRecord(zone, record)
+ 		if err != nil {
+ 			return errors.New("Error while updating DNS record: " + err.Error())
+@@ -91,10 +91,10 @@ func (c *DNSProvider) CleanUp(domain, token, keyAuth string) error {
+ 
+ 	if recordId != 0 {
+ 		record := egoscale.DNSRecord{
+-			Id: recordId,
++			ID: recordId,
+ 		}
+ 
+-		err = c.client.DeleteRecord(zone, record)
++		err = c.client.DeleteRecord(zone, record.ID)
+ 		if err != nil {
+ 			return errors.New("Error while deleting DNS record: " + err.Error())
+ 		}
+@@ -111,8 +111,8 @@ func (c *DNSProvider) FindExistingRecordId(zone, recordName string) (int64, erro
+ 		return -1, errors.New("Error while retrievening DNS records: " + err.Error())
+ 	}
+ 	for _, response := range responses {
+-		if response.Record.Name == recordName {
+-			return response.Record.Id, nil
++		if response.Name == recordName {
++			return response.ID, nil
+ 		}
+ 	}
+ 	return 0, nil
