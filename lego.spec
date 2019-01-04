@@ -1,6 +1,32 @@
 %global goipath github.com/xenolf/lego
 Version:        1.2.1
+
+%if %{defined fedora}
 %gometa
+%else
+ExclusiveArch:  %{go_arches}
+BuildRequires:  golang
+%global debug_package %{nil}
+%global gourl https://%{goipath}
+%global gosource %{gourl}/archive/v%{version}/%{name}-%{version}.tar.gz
+%define gobuildroot %{expand:
+GO_BUILD_PATH=$PWD/_build
+install -m 0755 -vd $(dirname $GO_BUILD_PATH/src/%{goipath})
+ln -fs $PWD $GO_BUILD_PATH/src/%{goipath}
+cd $GO_BUILD_PATH/src/%{goipath}
+install -m 0755 -vd _bin
+export PATH=$PWD/_bin${PATH:+:$PATH}
+export GOPATH=$GO_BUILD_PATH:%{gopath}
+}
+%define gobuild(o:) %{expand:
+%global _dwz_low_mem_die_limit 0
+%ifnarch ppc64
+go build -buildmode pie -compiler gc -tags="rpm_crashtraceback ${BUILDTAGS:-}" -ldflags "${LDFLAGS:-} -B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n') -extldflags '%__global_ldflags %{?__golang_extldflags}'" -a -v -x %{?**};
+%else
+go build -compiler gc -tags="rpm_crashtraceback ${BUILDTAGS:-}" -ldflags "${LDFLAGS:-} -B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n') -extldflags '%__global_ldflags %{?__golang_extldflags}'" -a -v -x %{?**};
+%endif
+}
+%endif
 
 
 Name:           lego
