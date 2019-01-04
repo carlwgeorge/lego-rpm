@@ -13,17 +13,12 @@
 %endif
 
 Name:           lego
-Version:        0.4.1
+Version:        1.2.1
 Release:        1%{?dist}
 Summary:        Let's Encrypt client and ACME library written in Go
 License:        MIT
 URL:            https://github.com/xenolf/lego
-# Upstream isn't vendoring dependencies yet
-# https://github.com/xenolf/lego/issues/165#issuecomment-363795902
-#Source0:        https://%%{import_path}/archive/v%%{version}/lego-%%{version}.tar.gz
-Source0:        https://github.com/carlwgeorge/lego/archive/%{version}-dep/lego-%{version}-dep.tar.gz
-# https://github.com/xenolf/lego/pull/469
-Patch0:         fix-exoscale-provider.patch
+Source0:        %{url}/archive/v%{version}/lego-%{version}.tar.gz
 ExclusiveArch:  %{go_arches}
 BuildRequires:  %{?go_compiler:compiler(go-compiler)}%{!?go_compiler:golang}
 
@@ -33,13 +28,14 @@ BuildRequires:  %{?go_compiler:compiler(go-compiler)}%{!?go_compiler:golang}
 
 
 %prep
-%autosetup -n lego-%{version}-dep -p 1
+%autosetup
 mkdir -p src/%(dirname %{import_path})
 ln -s ../../.. src/%{import_path}
 
 
 %build
 export GOPATH=$(pwd):%{gopath}
+export LDFLAGS="-X %{import_path}/main.version=%{version}"
 %gobuild -o bin/lego %{import_path}
 
 
@@ -54,5 +50,8 @@ install -D -m 0755 bin/lego %{buildroot}%{_bindir}/lego
 
 
 %changelog
+* Fri Jan 04 2019 Carl George <carl@george.computer> - 1.2.1-1
+- Latest upstream
+
 * Tue Feb 06 2018 Carl George <carl@george.computer> - 0.4.1-1
 - Initial package
