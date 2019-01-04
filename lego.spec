@@ -1,26 +1,14 @@
-%global import_path github.com/xenolf/lego
+%global goipath github.com/xenolf/lego
+Version:        1.2.1
+%gometa
 
-%bcond_with debug
-
-%if %{with debug}
-%global _dwz_low_mem_die_limit 0
-%else
-%global debug_package %{nil}
-%endif
-
-%if ! 0%{?gobuild:1}
-%define gobuild(o:) go build -ldflags "${LDFLAGS:-} -B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n')" -a -v -x %{?**};
-%endif
 
 Name:           lego
-Version:        1.2.1
 Release:        1%{?dist}
 Summary:        Let's Encrypt client and ACME library written in Go
 License:        MIT
-URL:            https://github.com/xenolf/lego
-Source0:        %{url}/archive/v%{version}/lego-%{version}.tar.gz
-ExclusiveArch:  %{go_arches}
-BuildRequires:  %{?go_compiler:compiler(go-compiler)}%{!?go_compiler:golang}
+URL:            %{gourl}
+Source0:        %{gosource}
 
 
 %description
@@ -29,18 +17,16 @@ BuildRequires:  %{?go_compiler:compiler(go-compiler)}%{!?go_compiler:golang}
 
 %prep
 %autosetup
-mkdir -p src/%(dirname %{import_path})
-ln -s ../../.. src/%{import_path}
 
 
 %build
-export GOPATH=$(pwd):%{gopath}
-export LDFLAGS="-X %{import_path}/main.version=%{version}"
-%gobuild -o bin/lego %{import_path}
+%gobuildroot
+export LDFLAGS="-X %{goipath}/main.version=%{version}"
+%gobuild -o _bin/lego %{goipath}
 
 
 %install
-install -D -m 0755 bin/lego %{buildroot}%{_bindir}/lego
+install -D -p -m 0755 _bin/lego %{buildroot}%{_bindir}/lego
 
 
 %files
